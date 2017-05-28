@@ -59,7 +59,6 @@ import com.grarak.kerneladiutor.utils.Prefs;
 import com.grarak.kerneladiutor.utils.Utils;
 import com.grarak.kerneladiutor.utils.ViewUtils;
 import com.grarak.kerneladiutor.views.dialog.ViewPagerDialog;
-import com.grarak.kerneladiutor.views.recyclerview.AdView;
 import com.grarak.kerneladiutor.views.recyclerview.RecyclerViewAdapter;
 import com.grarak.kerneladiutor.views.recyclerview.RecyclerViewItem;
 import com.viewpagerindicator.CirclePageIndicator;
@@ -85,8 +84,6 @@ public abstract class RecyclerViewFragment extends BaseFragment {
     private RecyclerView.LayoutManager mLayoutManager;
     private RecyclerViewAdapter mRecyclerViewAdapter;
     private Scroller mScroller;
-
-    private AdView mAdView;
 
     private View mProgress;
 
@@ -194,17 +191,6 @@ public abstract class RecyclerViewFragment extends BaseFragment {
             }
         }) : mRecyclerViewAdapter);
         mRecyclerView.setLayoutManager(mLayoutManager = getLayoutManager());
-
-        if (!Utils.DONATED
-                && !showTopFab()
-                && !isForeground()
-                && getActivity() instanceof NavigationActivity
-                && showAd()
-                && mAdView == null) {
-            mAdView = new AdView();
-        } else {
-            mAdView = null;
-        }
 
         mTopFab.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -401,18 +387,6 @@ public abstract class RecyclerViewFragment extends BaseFragment {
     }
 
     protected void addItem(RecyclerViewItem recyclerViewItem) {
-        if (mItems.size() == 0 && mAdView != null && !mItems.contains(mAdView)) {
-            boolean exists = false;
-            for (RecyclerViewItem item : mItems) {
-                if (item instanceof AdView) {
-                    exists = true;
-                    break;
-                }
-            }
-            if (!exists) {
-                mItems.add(mAdView);
-            }
-        }
         mItems.add(recyclerViewItem);
         if (mRecyclerViewAdapter != null) {
             mRecyclerViewAdapter.notifyItemInserted(mItems.size() - 1);
@@ -486,7 +460,7 @@ public abstract class RecyclerViewFragment extends BaseFragment {
     }
 
     public int itemsSize() {
-        return mAdView != null && mItems.contains(mAdView) ? mItems.size() - 1 : mItems.size();
+        return mItems.size();
     }
 
     protected void addViewPagerFragment(BaseFragment fragment) {
@@ -838,16 +812,6 @@ public abstract class RecyclerViewFragment extends BaseFragment {
         }
     }
 
-    protected boolean showAd() {
-        return true;
-    }
-
-    public void ghAdReady() {
-        if (mAdView != null) {
-            mAdView.ghReady();
-        }
-    }
-
     @Override
     public void onDestroy() {
         super.onDestroy();
@@ -865,7 +829,6 @@ public abstract class RecyclerViewFragment extends BaseFragment {
         if (mHandler != null) {
             mHandler.removeCallbacks(mRefresh);
         }
-        mAdView = null;
         for (RecyclerViewItem item : mItems) {
             item.onDestroy();
         }
