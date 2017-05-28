@@ -32,9 +32,6 @@ import android.support.v4.content.ContextCompat;
 import android.view.View;
 import android.widget.TextView;
 
-import com.crashlytics.android.Crashlytics;
-import com.crashlytics.android.answers.Answers;
-import com.crashlytics.android.answers.CustomEvent;
 import com.grarak.kerneladiutor.BuildConfig;
 import com.grarak.kerneladiutor.R;
 import com.grarak.kerneladiutor.database.tools.profiles.Profiles;
@@ -65,8 +62,6 @@ import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
-import io.fabric.sdk.android.Fabric;
-
 /**
  * Created by willi on 14.04.16.
  */
@@ -79,11 +74,6 @@ public class MainActivity extends BaseActivity {
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        // Don't initialize analytics with debug build
-        if (!BuildConfig.DEBUG) {
-            Fabric.with(this, new Crashlytics());
-        }
 
         setContentView(R.layout.activity_main);
 
@@ -231,12 +221,6 @@ public class MainActivity extends BaseActivity {
             Vibration.supported();
             Voltage.supported();
             Wake.supported();
-
-            if (!BuildConfig.DEBUG) {
-                // Send SoC type to analytics to collect stats
-                Answers.getInstance().logCustom(new CustomEvent("SoC")
-                        .putCustomAttribute("type", Device.getBoard()));
-            }
         }
 
         /**
@@ -285,11 +269,6 @@ public class MainActivity extends BaseActivity {
                 startActivity(intent);
                 finish();
 
-                if (!BuildConfig.DEBUG) {
-                    // Send problem to analytics to collect stats
-                    Answers.getInstance().logCustom(new CustomEvent("Can't access")
-                            .putCustomAttribute("no_found", mHasRoot ? "no busybox" : "no root"));
-                }
                 return;
             }
 
@@ -368,10 +347,6 @@ public class MainActivity extends BaseActivity {
                     } else if (donationValid) {
                         launch(1);
                     } else {
-                        if (mPatched && !BuildConfig.DEBUG) {
-                            Answers.getInstance().logCustom(new CustomEvent("Pirated")
-                                    .putCustomAttribute("android_id", Utils.getAndroidId(MainActivity.this)));
-                        }
                         launch(mPatched ? 3 : -1);
                     }
                 }
