@@ -524,9 +524,4 @@ public class CustomControlsFragment extends RecyclerViewFragment {
         mLoaded = false;
     }
 
-    @Override
-    protected boolean showAd() {
-        return true;
-    }
-
 }

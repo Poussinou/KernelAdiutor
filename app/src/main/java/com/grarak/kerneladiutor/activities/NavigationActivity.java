@@ -100,7 +100,6 @@ import com.grarak.kerneladiutor.utils.kernel.wake.Wake;
 import com.grarak.kerneladiutor.utils.root.RootUtils;
 import com.grarak.kerneladiutor.utils.tools.Backup;
 import com.grarak.kerneladiutor.utils.tools.SupportedDownloads;
-import com.grarak.kerneladiutor.views.AdNativeExpress;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -127,9 +126,6 @@ public class NavigationActivity extends BaseActivity
 
     private int mSelection;
     private boolean mLicenseDialog = true;
-
-    private WebpageReader mAdsFetcher;
-    private boolean mFetchingAds;
 
     private boolean mAllowCommit;
 
@@ -243,41 +239,6 @@ public class NavigationActivity extends BaseActivity
     }
 
     private void init(Bundle savedInstanceState) {
-        int result = Prefs.getInt("license", -1, this);
-        int intentResult = getIntent().getIntExtra("result", -1);
-
-        if ((result == intentResult && (result == 1 || result == 2)) && mLicenseDialog) {
-            ViewUtils.dialogBuilder(getString(R.string.license_invalid), null,
-                    new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                        }
-                    }, new DialogInterface.OnDismissListener() {
-                        @Override
-                        public void onDismiss(DialogInterface dialog) {
-                            mLicenseDialog = false;
-                            Prefs.saveInt("license", -1, NavigationActivity.this);
-                        }
-                    }, this).show();
-        } else if ((result != intentResult || result == 3) && mLicenseDialog) {
-            ViewUtils.dialogBuilder(getString(R.string.pirated), null, new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                }
-            }, new DialogInterface.OnDismissListener() {
-                @Override
-                public void onDismiss(DialogInterface dialog) {
-                    mLicenseDialog = false;
-                    Prefs.saveInt("license", -1, NavigationActivity.this);
-                }
-            }, this).show();
-        } else {
-            mLicenseDialog = false;
-            if (result == 0) {
-                Utils.DONATED = true;
-            }
-        }
-
         sCallback = new Callback() {
             @Override
             public void onBannerResize() {
@@ -311,7 +272,6 @@ public class NavigationActivity extends BaseActivity
         if (savedInstanceState != null) {
             mSelection = savedInstanceState.getInt("selection");
             mLicenseDialog = savedInstanceState.getBoolean("license");
-            mFetchingAds = savedInstanceState.getBoolean("fetching_ads");
         }
 
         String section = getIntent().getStringExtra("section");
@@ -333,27 +293,6 @@ public class NavigationActivity extends BaseActivity
 
         if (Prefs.getBoolean("data_sharing", true, this)) {
             startService(new Intent(this, Monitor.class));
-        }
-
-        if (!mFetchingAds && !Utils.DONATED) {
-            mFetchingAds = true;
-            mAdsFetcher = new WebpageReader(this, new WebpageReader.WebpageCallback() {
-                @Override
-                public void onCallback(String raw, CharSequence html) {
-                    if (raw == null || raw.isEmpty()) return;
-                    AdNativeExpress.GHAds ghAds = new AdNativeExpress.GHAds(raw);
-                    if (ghAds.readable()) {
-                        ghAds.cache(NavigationActivity.this);
-                        for (int id : sActualFragments.keySet()) {
-                            Fragment fragment = sActualFragments.get(id);
-                            if (fragment instanceof RecyclerViewFragment) {
-                                ((RecyclerViewFragment) fragment).ghAdReady();
-                            }
-                        }
-                    }
-                }
-            });
-            mAdsFetcher.execute(AdNativeExpress.ADS_FETCH);
         }
     }
 
@@ -504,9 +443,6 @@ public class NavigationActivity extends BaseActivity
             }
         }
         fragmentTransaction.commitAllowingStateLoss();
-        if (mAdsFetcher != null) {
-            mAdsFetcher.cancel();
-        }
         RootUtils.closeSU();
     }
 
@@ -517,7 +453,6 @@ public class NavigationActivity extends BaseActivity
         mAllowCommit = false;
         outState.putInt("selection", mSelection);
         outState.putBoolean("license", mLicenseDialog);
-        outState.putBoolean("fetching_ads", mFetchingAds);
     }
 
     @Override

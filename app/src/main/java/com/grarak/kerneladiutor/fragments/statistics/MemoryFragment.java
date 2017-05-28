@@ -63,10 +63,4 @@ public class MemoryFragment extends RecyclerViewFragment {
             items.add(memView);
         }
     }
-
-    @Override
-    protected boolean showAd() {
-        return true;
-    }
-
 }

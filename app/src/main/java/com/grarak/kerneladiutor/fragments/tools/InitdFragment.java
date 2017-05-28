@@ -354,10 +354,4 @@ public class InitdFragment extends RecyclerViewFragment {
             return rootView;
         }
     }
-
-    @Override
-    protected boolean showAd() {
-        return true;
-    }
-
 }
