@@ -320,6 +320,9 @@ public abstract class RecyclerViewFragment extends BaseFragment {
             hideProgress();
             postInit();
             adjustScrollPosition();
+
+            mViewPager.setVisibility(View.VISIBLE);
+            mViewPagerShadow.setVisibility(View.VISIBLE);
         }
 
         return mRootView;
