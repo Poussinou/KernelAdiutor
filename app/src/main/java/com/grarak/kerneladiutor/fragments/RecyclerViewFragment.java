@@ -815,6 +815,16 @@ public abstract class RecyclerViewFragment extends BaseFragment {
         }
     }
 
+    protected boolean showAd() {
+        return false;
+    }
+
+    public void ghAdReady() {
+        if (mAdView != null) {
+            mAdView.ghReady();
+        }
+    }
+
     @Override
     public void onDestroy() {
         super.onDestroy();
