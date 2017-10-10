@@ -820,9 +820,6 @@ public abstract class RecyclerViewFragment extends BaseFragment {
     }
 
     public void ghAdReady() {
-        if (mAdView != null) {
-            mAdView.ghReady();
-        }
     }
 
     @Override
