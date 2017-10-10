@@ -2,14 +2,14 @@ apply plugin: 'com.android.application'
 
 android {
     compileSdkVersion 26
-    buildToolsVersion "26.0.0"
+    buildToolsVersion "26.0.1"
 
     defaultConfig {
         applicationId "com.nhellfire.kerneladiutor"
         minSdkVersion 15
         targetSdkVersion 26
-        versionCode 240
-        versionName "0.9.72"
+        versionCode 243
+        versionName "0.9.73.1"
         vectorDrawables.useSupportLibrary = true
     }
     buildTypes {
