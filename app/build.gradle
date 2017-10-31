@@ -8,8 +8,8 @@ android {
         applicationId "com.nhellfire.kerneladiutor"
         minSdkVersion 15
         targetSdkVersion 26
-        versionCode 243
-        versionName "0.9.73.1"
+        versionCode 244
+        versionName "0.9.73.1.1"
         vectorDrawables.useSupportLibrary = true
     }
     buildTypes {
