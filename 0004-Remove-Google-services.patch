@@ -1,0 +1,103 @@
+From 60a2046e239b66d10dff68bd882ed386c498d216 Mon Sep 17 00:00:00 2001
+From: NHellFire <nathan.renniewaldock@gmail.com>
+Date: Sun, 28 May 2017 21:28:36 +0100
+Subject: [PATCH] Remove Google services
+
+---
+ app/build.gradle         |  2 --
+ app/google-services.json | 55 ------------------------------------------------
+ build.gradle             |  4 ----
+ 3 files changed, 61 deletions(-)
+ delete mode 100644 app/google-services.json
+
+diff --git a/app/build.gradle b/app/build.gradle
+index 8b1ed257..93284230 100755
+--- a/app/build.gradle
++++ b/app/build.gradle
+@@ -56,5 +56,3 @@ dependencies {
+     compile 'org.cyanogenmod:platform.sdk:5.0.1'
+     testCompile 'junit:junit:4.12'
+ }
+-
+-apply plugin: 'com.google.gms.google-services'
+\ No newline at end of file
+diff --git a/app/google-services.json b/app/google-services.json
+deleted file mode 100644
+index 27e982c1..00000000
+--- a/app/google-services.json
++++ /dev/null
+@@ -1,55 +0,0 @@
+-{
+-  "project_info": {
+-    "project_number": "35594625822",
+-    "firebase_url": "https://kerneladiutor-7ab59.firebaseio.com",
+-    "project_id": "kerneladiutor-7ab59",
+-    "storage_bucket": "kerneladiutor-7ab59.appspot.com"
+-  },
+-  "client": [
+-    {
+-      "client_info": {
+-        "mobilesdk_app_id": "1:35594625822:android:9768d1d851b6742d",
+-        "android_client_info": {
+-          "package_name": "com.grarak.kerneladiutor"
+-        }
+-      },
+-      "oauth_client": [
+-        {
+-          "client_id": "35594625822-9ir2cg9ruculjh9kvn6srvund5t9v37v.apps.googleusercontent.com",
+-          "client_type": 1,
+-          "android_info": {
+-            "package_name": "com.grarak.kerneladiutor",
+-            "certificate_hash": "5CA1C4FA2508E578D98527B077E690C7116C3BD8"
+-          }
+-        },
+-        {
+-          "client_id": "35594625822-akvfid7afugb5khjreqdlkbbsjlvkrp7.apps.googleusercontent.com",
+-          "client_type": 3
+-        }
+-      ],
+-      "api_key": [
+-        {
+-          "current_key": "AIzaSyCSTgvscKiNuBYbPGO-eKXvjjOo9izjMGQ"
+-        }
+-      ],
+-      "services": {
+-        "analytics_service": {
+-          "status": 1
+-        },
+-        "appinvite_service": {
+-          "status": 2,
+-          "other_platform_oauth_client": [
+-            {
+-              "client_id": "35594625822-akvfid7afugb5khjreqdlkbbsjlvkrp7.apps.googleusercontent.com",
+-              "client_type": 3
+-            }
+-          ]
+-        },
+-        "ads_service": {
+-          "status": 2
+-        }
+-      }
+-    }
+-  ],
+-  "configuration_version": "1"
+-}
+\ No newline at end of file
+diff --git a/build.gradle b/build.gradle
+index 30957d8a..3ee2d98e 100755
+--- a/build.gradle
++++ b/build.gradle
+@@ -6,10 +6,6 @@ buildscript {
+     }
+     dependencies {
+         classpath 'com.android.tools.build:gradle:2.3.1'
+-
+-        // NOTE: Do not place your application dependencies here; they belong
+-        // in the individual module build.gradle files
+-        classpath 'com.google.gms:google-services:3.0.0'
+     }
+ }
+ 
+-- 
+2.11.0
+

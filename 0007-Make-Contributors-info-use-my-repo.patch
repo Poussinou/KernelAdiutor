@@ -1,0 +1,25 @@
+From 0ac360162a0f985c80be4e33cb9be2840bedb2e1 Mon Sep 17 00:00:00 2001
+From: Nathan Rennie-Waldock <nathan.renniewaldock@gmail.com>
+Date: Tue, 10 Oct 2017 20:49:09 +0100
+Subject: [PATCH] Make Contributors info use my repo
+
+---
+ .../com/grarak/kerneladiutor/fragments/other/ContributorsFragment.java  | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/app/src/main/java/com/grarak/kerneladiutor/fragments/other/ContributorsFragment.java b/app/src/main/java/com/grarak/kerneladiutor/fragments/other/ContributorsFragment.java
+index f91975a9..a85e8fe7 100755
+--- a/app/src/main/java/com/grarak/kerneladiutor/fragments/other/ContributorsFragment.java
++++ b/app/src/main/java/com/grarak/kerneladiutor/fragments/other/ContributorsFragment.java
+@@ -89,7 +89,7 @@ public class ContributorsFragment extends RecyclerViewFragment {
+                     }
+                 }
+             });
+-            mWebpageReader.execute("https://api.github.com/repos/Grarak/KernelAdiutor/contributors");
++            mWebpageReader.execute("https://api.github.com/repos/NHellFire/KernelAdiutor/contributors");
+         }
+     }
+ 
+-- 
+2.11.0
+

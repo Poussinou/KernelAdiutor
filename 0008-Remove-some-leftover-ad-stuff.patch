@@ -1,0 +1,39 @@
+From a40066c971c9d980b4a264a8917f102f2c70eaf1 Mon Sep 17 00:00:00 2001
+From: Nathan Rennie-Waldock <nathan.renniewaldock@gmail.com>
+Date: Tue, 10 Oct 2017 20:49:32 +0100
+Subject: [PATCH] Remove some leftover ad stuff
+
+---
+ .../java/com/grarak/kerneladiutor/fragments/RecyclerViewFragment.java  | 3 ---
+ .../java/com/grarak/kerneladiutor/fragments/other/AboutFragment.java   | 1 -
+ 2 files changed, 4 deletions(-)
+
+diff --git a/app/src/main/java/com/grarak/kerneladiutor/fragments/RecyclerViewFragment.java b/app/src/main/java/com/grarak/kerneladiutor/fragments/RecyclerViewFragment.java
+index 774ed521..faf65c96 100755
+--- a/app/src/main/java/com/grarak/kerneladiutor/fragments/RecyclerViewFragment.java
++++ b/app/src/main/java/com/grarak/kerneladiutor/fragments/RecyclerViewFragment.java
+@@ -820,9 +820,6 @@ public abstract class RecyclerViewFragment extends BaseFragment {
+     }
+ 
+     public void ghAdReady() {
+-        if (mAdView != null) {
+-            mAdView.ghReady();
+-        }
+     }
+ 
+     @Override
+diff --git a/app/src/main/java/com/grarak/kerneladiutor/fragments/other/AboutFragment.java b/app/src/main/java/com/grarak/kerneladiutor/fragments/other/AboutFragment.java
+index 9766c054..72323bb2 100755
+--- a/app/src/main/java/com/grarak/kerneladiutor/fragments/other/AboutFragment.java
++++ b/app/src/main/java/com/grarak/kerneladiutor/fragments/other/AboutFragment.java
+@@ -52,7 +52,6 @@ public class AboutFragment extends RecyclerViewFragment {
+         sLibraries.put("Google,v7 recyclerview library", "https://developer.android.com/topic/libraries/support-library/features.html#v7");
+         sLibraries.put("Ozodrukh,CircularReveal", "https://github.com/ozodrukh/CircularReveal");
+         sLibraries.put("Roman Nurik,dashclock", "https://github.com/romannurik/dashclock");
+-        sLibraries.put("Google,AdMob", "https://developers.google.com/android/guides/setup");
+         sLibraries.put("Matthew Precious,swirl", "https://github.com/mattprecious/swirl");
+         sLibraries.put("Lopez Mikhael,CircularImageView", "https://github.com/lopspower/CircularImageView");
+         sLibraries.put("Square,picasso", "https://github.com/square/picasso");
+-- 
+2.11.0
+

@@ -1,0 +1,39 @@
+From 72c85f8afc9f60d1a0628f3067b04f8ab23772d3 Mon Sep 17 00:00:00 2001
+From: Nathan Rennie-Waldock <nathan.renniewaldock@gmail.com>
+Date: Wed, 25 Oct 2017 15:33:50 +0100
+Subject: [PATCH] Fix incorrect references to package name as class name
+
+---
+ app/src/main/java/com/grarak/kerneladiutor/services/boot/Service.java | 2 +-
+ app/src/main/java/com/grarak/kerneladiutor/utils/Utils.java           | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/app/src/main/java/com/grarak/kerneladiutor/services/boot/Service.java b/app/src/main/java/com/grarak/kerneladiutor/services/boot/Service.java
+index 787c4217..9245eb0f 100755
+--- a/app/src/main/java/com/grarak/kerneladiutor/services/boot/Service.java
++++ b/app/src/main/java/com/grarak/kerneladiutor/services/boot/Service.java
+@@ -90,7 +90,7 @@ public class Service extends android.app.Service {
+                 pm.setComponentEnabledSetting(new ComponentName(this, StartActivity.class),
+                         PackageManager.COMPONENT_ENABLED_STATE_DISABLED, PackageManager.DONT_KILL_APP);
+                 pm.setComponentEnabledSetting(new ComponentName(BuildConfig.APPLICATION_ID,
+-                                BuildConfig.APPLICATION_ID + ".activities.StartActivity"),
++                                "com.grarak.kerneladiutor.activities.StartActivity"),
+                         PackageManager.COMPONENT_ENABLED_STATE_DISABLED, PackageManager.DONT_KILL_APP);
+             } else {
+                 Utils.setStartActivity(Prefs.getBoolean("materialicon", false, this), this);
+diff --git a/app/src/main/java/com/grarak/kerneladiutor/utils/Utils.java b/app/src/main/java/com/grarak/kerneladiutor/utils/Utils.java
+index 880a05ae..29b6dd9a 100755
+--- a/app/src/main/java/com/grarak/kerneladiutor/utils/Utils.java
++++ b/app/src/main/java/com/grarak/kerneladiutor/utils/Utils.java
+@@ -144,7 +144,7 @@ public class Utils {
+                 material ? PackageManager.COMPONENT_ENABLED_STATE_DISABLED :
+                         PackageManager.COMPONENT_ENABLED_STATE_ENABLED, PackageManager.DONT_KILL_APP);
+         pm.setComponentEnabledSetting(new ComponentName(BuildConfig.APPLICATION_ID,
+-                        BuildConfig.APPLICATION_ID + ".activities.StartActivity-Material"),
++                        "com.grarak.kerneladiutor.activities.StartActivity-Material"),
+                 material ? PackageManager.COMPONENT_ENABLED_STATE_ENABLED :
+                         PackageManager.COMPONENT_ENABLED_STATE_DISABLED, PackageManager.DONT_KILL_APP);
+     }
+-- 
+2.11.0
+

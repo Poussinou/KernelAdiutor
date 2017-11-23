@@ -1,0 +1,40 @@
+From 45eb3456aaa47822e608f5a5bd962c408bdcd3b1 Mon Sep 17 00:00:00 2001
+From: dimqua <dimqua@users.noreply.github.com>
+Date: Sun, 17 Sep 2017 14:08:22 +0000
+Subject: [PATCH] F-Droid changes
+
+---
+ app/build.gradle | 12 ------------
+ 1 file changed, 12 deletions(-)
+
+diff --git a/app/build.gradle b/app/build.gradle
+index 3238db64..4d5582f5 100755
+--- a/app/build.gradle
++++ b/app/build.gradle
+@@ -1,15 +1,4 @@
+-buildscript {
+-    repositories {
+-        maven { url 'https://maven.fabric.io/public' }
+-    }
+-
+-    dependencies {
+-        classpath 'io.fabric.tools:gradle:1.21.7'
+-    }
+-}
+-
+ apply plugin: 'com.android.application'
+-apply plugin: 'io.fabric'
+ 
+ android {
+     compileSdkVersion 26
+@@ -36,7 +25,6 @@ android {
+ 
+ repositories {
+     maven { url "https://jitpack.io" }
+-    maven { url "https://maven.fabric.io/public" }
+ }
+ 
+ dependencies {
+-- 
+2.11.0
+

@@ -1,0 +1,25 @@
+From 3f802d4080276021cbccedbe3a3c2e699ab62741 Mon Sep 17 00:00:00 2001
+From: Nathan Rennie-Waldock <nathan.renniewaldock@gmail.com>
+Date: Sun, 19 Nov 2017 21:05:34 +0000
+Subject: [PATCH 1/2] Fix shortcuts after changing package ID
+
+---
+ app/src/main/res/xml/shortcuts.xml | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/app/src/main/res/xml/shortcuts.xml b/app/src/main/res/xml/shortcuts.xml
+index db18e7bc..31678496 100644
+--- a/app/src/main/res/xml/shortcuts.xml
++++ b/app/src/main/res/xml/shortcuts.xml
+@@ -9,7 +9,7 @@
+         <intent
+             android:action="android.intent.action.VIEW"
+             android:targetClass="com.grarak.kerneladiutor.activities.MainActivity"
+-            android:targetPackage="com.grarak.kerneladiutor">
++            android:targetPackage="com.nhellfire.kerneladiutor">
+             <extra
+                 android:name="section"
+                 android:value="com.grarak.kerneladiutor.fragments.other.SettingsFragment" />
+-- 
+2.11.0
+

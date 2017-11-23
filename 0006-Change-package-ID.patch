@@ -1,0 +1,25 @@
+From 1ca255ac318f269eee508b6727ef02e0e6c8a6ec Mon Sep 17 00:00:00 2001
+From: dimqua <dimqua@users.noreply.github.com>
+Date: Sun, 17 Sep 2017 14:11:28 +0000
+Subject: [PATCH] Change package ID
+
+---
+ app/build.gradle | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/app/build.gradle b/app/build.gradle
+index 4d5582f5..8aa2bcbf 100755
+--- a/app/build.gradle
++++ b/app/build.gradle
+@@ -5,7 +5,7 @@ android {
+     buildToolsVersion "26.0.0"
+ 
+     defaultConfig {
+-        applicationId "com.grarak.kerneladiutor"
++        applicationId "com.nhellfire.kerneladiutor"
+         minSdkVersion 15
+         targetSdkVersion 26
+         versionCode 240
+-- 
+2.11.0
+

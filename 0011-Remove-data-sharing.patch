@@ -1,0 +1,942 @@
+From e2060ed996629658be1c127f4a58498121f31ef5 Mon Sep 17 00:00:00 2001
+From: Nathan Rennie-Waldock <nathan.renniewaldock@gmail.com>
+Date: Thu, 23 Nov 2017 21:49:54 +0000
+Subject: [PATCH] Remove data sharing (closes #4)
+
+---
+ app/src/main/AndroidManifest.xml                   |   4 -
+ .../kerneladiutor/services/monitor/IMonitor.aidl   |   7 -
+ .../activities/DataSharingSearchActivity.java      | 209 ---------------------
+ .../activities/NavigationActivity.java             |   7 -
+ .../fragments/tools/DataSharingFragment.java       | 108 -----------
+ .../kerneladiutor/services/boot/Receiver.java      |   4 -
+ .../kerneladiutor/services/monitor/Monitor.java    | 199 --------------------
+ .../grarak/kerneladiutor/utils/root/Control.java   |  21 ---
+ .../datasharing/DataSharingDeviceView.java         | 123 ------------
+ .../datasharing/DataSharingPageView.java           | 112 -----------
+ 10 files changed, 794 deletions(-)
+ delete mode 100644 app/src/main/aidl/com/grarak/kerneladiutor/services/monitor/IMonitor.aidl
+ delete mode 100644 app/src/main/java/com/grarak/kerneladiutor/activities/DataSharingSearchActivity.java
+ delete mode 100644 app/src/main/java/com/grarak/kerneladiutor/fragments/tools/DataSharingFragment.java
+ delete mode 100644 app/src/main/java/com/grarak/kerneladiutor/services/monitor/Monitor.java
+ delete mode 100644 app/src/main/java/com/grarak/kerneladiutor/views/recyclerview/datasharing/DataSharingDeviceView.java
+ delete mode 100644 app/src/main/java/com/grarak/kerneladiutor/views/recyclerview/datasharing/DataSharingPageView.java
+
+diff --git a/app/src/main/AndroidManifest.xml b/app/src/main/AndroidManifest.xml
+index 2f99de62..b6903304 100755
+--- a/app/src/main/AndroidManifest.xml
++++ b/app/src/main/AndroidManifest.xml
+@@ -76,7 +76,6 @@
+             android:configChanges="locale|keyboard|keyboardHidden|orientation|screenSize|navigation" />
+         <activity android:name=".activities.BannerResizerActivity" />
+         <activity android:name=".activities.tools.profile.ProfileEditActivity" />
+-        <activity android:name=".activities.DataSharingSearchActivity" />
+ 
+         <receiver
+             android:name=".services.boot.Receiver"
+@@ -89,9 +88,6 @@
+         </receiver>
+ 
+         <service android:name=".services.boot.Service" />
+-        <service
+-            android:name=".services.monitor.Monitor"
+-            android:process=":monitoring" />
+ 
+         <receiver android:name=".services.boot.Service$CancelReceiver" />
+ 
+diff --git a/app/src/main/aidl/com/grarak/kerneladiutor/services/monitor/IMonitor.aidl b/app/src/main/aidl/com/grarak/kerneladiutor/services/monitor/IMonitor.aidl
+deleted file mode 100644
+index 608d0701..00000000
+--- a/app/src/main/aidl/com/grarak/kerneladiutor/services/monitor/IMonitor.aidl
++++ /dev/null
+@@ -1,7 +0,0 @@
+-package com.grarak.kerneladiutor.services.monitor;
+-
+-interface IMonitor {
+-
+-    void onSettingsChange();
+-
+-}
+diff --git a/app/src/main/java/com/grarak/kerneladiutor/activities/DataSharingSearchActivity.java b/app/src/main/java/com/grarak/kerneladiutor/activities/DataSharingSearchActivity.java
+deleted file mode 100644
+index 369e6b4c..00000000
+--- a/app/src/main/java/com/grarak/kerneladiutor/activities/DataSharingSearchActivity.java
++++ /dev/null
+@@ -1,209 +0,0 @@
+-/*
+- * Copyright (C) 2017 Willi Ye <williye97@gmail.com>
+- *
+- * This file is part of Kernel Adiutor.
+- *
+- * Kernel Adiutor is free software: you can redistribute it and/or modify
+- * it under the terms of the GNU General Public License as published by
+- * the Free Software Foundation, either version 3 of the License, or
+- * (at your option) any later version.
+- *
+- * Kernel Adiutor is distributed in the hope that it will be useful,
+- * but WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+- * GNU General Public License for more details.
+- *
+- * You should have received a copy of the GNU General Public License
+- * along with Kernel Adiutor.  If not, see <http://www.gnu.org/licenses/>.
+- *
+- */
+-package com.grarak.kerneladiutor.activities;
+-
+-import android.content.DialogInterface;
+-import android.os.Bundle;
+-import android.support.annotation.Nullable;
+-import android.support.v4.app.Fragment;
+-import android.view.View;
+-
+-import com.grarak.kerneladiutor.R;
+-import com.grarak.kerneladiutor.fragments.RecyclerViewFragment;
+-import com.grarak.kerneladiutor.utils.Utils;
+-import com.grarak.kerneladiutor.utils.server.DeviceInfo;
+-import com.grarak.kerneladiutor.utils.server.ServerSearchDevice;
+-import com.grarak.kerneladiutor.views.dialog.Dialog;
+-import com.grarak.kerneladiutor.views.recyclerview.ButtonView;
+-import com.grarak.kerneladiutor.views.recyclerview.RecyclerViewItem;
+-import com.grarak.kerneladiutor.views.recyclerview.datasharing.DataSharingDeviceView;
+-import com.grarak.kerneladiutor.views.recyclerview.datasharing.DataSharingPageView;
+-
+-import java.util.List;
+-
+-/**
+- * Created by willi on 16.09.17.
+- */
+-
+-public class DataSharingSearchActivity extends BaseActivity {
+-
+-    @Override
+-    protected void onCreate(@Nullable Bundle savedInstanceState) {
+-        super.onCreate(savedInstanceState);
+-        if (!Utils.DONATED) {
+-            Utils.toast("nice try", this);
+-            return;
+-        }
+-
+-        setContentView(R.layout.activity_fragments);
+-
+-        initToolBar();
+-
+-        getSupportFragmentManager().beginTransaction().replace(R.id.content_frame,
+-                getFragment(), "create_fragment").commit();
+-    }
+-
+-    private Fragment getFragment() {
+-        Fragment fragment = getSupportFragmentManager().findFragmentByTag("create_fragment");
+-        if (fragment == null) {
+-            fragment = new DataSharingSearchFragment();
+-        }
+-        return fragment;
+-    }
+-
+-    public static class DataSharingSearchFragment extends RecyclerViewFragment {
+-
+-        private ServerSearchDevice mServerSearchDevice;
+-        private List<String> mBoards;
+-        private String mSelection;
+-
+-        @Override
+-        protected boolean showViewPager() {
+-            return false;
+-        }
+-
+-        @Override
+-        protected void postInit() {
+-            super.postInit();
+-
+-            ((BaseActivity) getActivity()).getSupportActionBar()
+-                    .setTitle(mSelection == null ? getString(R.string.show_all) : mSelection);
+-            if (mServerSearchDevice == null) {
+-                showProgress();
+-                mServerSearchDevice = new ServerSearchDevice("https://www.grarak.com", getActivity());
+-                loadDevices(1, null);
+-            }
+-        }
+-
+-        private void loadDevices(final int page, final String filter) {
+-            showProgress();
+-            clearItems();
+-
+-            ButtonView filterBtn = new ButtonView();
+-            filterBtn.setText(getString(R.string.filter));
+-            filterBtn.setFullSpan(true);
+-            filterBtn.setOnClickListener(new View.OnClickListener() {
+-                @Override
+-                public void onClick(View view) {
+-                    if (mBoards != null) {
+-                        new Dialog(getActivity())
+-                                .setTitle(getString(R.string.board))
+-                                .setItems(mBoards.toArray(new String[mBoards.size()]),
+-                                        new DialogInterface.OnClickListener() {
+-                                            @Override
+-                                            public void onClick(DialogInterface dialogInterface, int i) {
+-                                                loadDevices(1, i == 0 ? null : mBoards.get(i));
+-                                                ((BaseActivity) getActivity()).getSupportActionBar()
+-                                                        .setTitle(mSelection = mBoards.get(i));
+-                                            }
+-                                        }).show();
+-                    }
+-                }
+-            });
+-            addItem(filterBtn);
+-
+-            final DataSharingPageView pageView = new DataSharingPageView();
+-            pageView.setPage(page);
+-            pageView.setDataSharingPageListener(new DataSharingPageView.DataSharingPageListener() {
+-                @Override
+-                public void onPrevious() {
+-                    loadDevices(page - 1, filter);
+-                }
+-
+-                @Override
+-                public void onNext() {
+-                    loadDevices(page + 1, filter);
+-                }
+-            });
+-            addItem(pageView);
+-
+-            if (page > 1) {
+-                mServerSearchDevice.getDevices(new ServerSearchDevice.DeviceSearchListener() {
+-                    @Override
+-                    public void onDevicesResult(List<DeviceInfo> devices, int page) {
+-                        pageView.showPrevious(true);
+-                    }
+-
+-                    @Override
+-                    public void onDevicesFailure() {
+-                        pageView.showPrevious(false);
+-                    }
+-                }, page - 1, filter);
+-            }
+-            mServerSearchDevice.getDevices(new ServerSearchDevice.DeviceSearchListener() {
+-                @Override
+-                public void onDevicesResult(List<DeviceInfo> devices, int page) {
+-                    for (int i = 0; i < devices.size(); i++) {
+-                        addItem(new DataSharingDeviceView(devices.get(i), (page - 1) * 10 + 1 + i));
+-                    }
+-                    hideProgress();
+-                }
+-
+-                @Override
+-                public void onDevicesFailure() {
+-                    hideProgress();
+-                    failure(getString(R.string.failed_devices));
+-                }
+-            }, page, filter);
+-            mServerSearchDevice.getDevices(new ServerSearchDevice.DeviceSearchListener() {
+-                @Override
+-                public void onDevicesResult(List<DeviceInfo> devices, int page) {
+-                    pageView.showNext(true);
+-                }
+-
+-                @Override
+-                public void onDevicesFailure() {
+-                    pageView.showNext(false);
+-                }
+-            }, page + 1, filter);
+-            mServerSearchDevice.getBoards(new ServerSearchDevice.BoardSearchListener() {
+-                @Override
+-                public void onBoardResult(List<String> boards) {
+-                    boards.add(0, getString(R.string.show_all));
+-                    mBoards = boards;
+-                }
+-
+-                @Override
+-                public void onBoardFailure() {
+-                    failure(getString(R.string.failed_board));
+-                }
+-            });
+-        }
+-
+-        @Override
+-        protected void addItems(List<RecyclerViewItem> items) {
+-        }
+-
+-        private void failure(String message) {
+-            Utils.toast(message, getActivity());
+-            hideProgress();
+-        }
+-
+-        @Override
+-        public void onDestroy() {
+-            super.onDestroy();
+-            if (mServerSearchDevice != null) {
+-                mServerSearchDevice.cancel();
+-                mServerSearchDevice = null;
+-            }
+-        }
+-    }
+-
+-}
+diff --git a/app/src/main/java/com/grarak/kerneladiutor/activities/NavigationActivity.java b/app/src/main/java/com/grarak/kerneladiutor/activities/NavigationActivity.java
+index d4c08692..dbc26aea 100755
+--- a/app/src/main/java/com/grarak/kerneladiutor/activities/NavigationActivity.java
++++ b/app/src/main/java/com/grarak/kerneladiutor/activities/NavigationActivity.java
+@@ -72,14 +72,12 @@ import com.grarak.kerneladiutor.fragments.statistics.MemoryFragment;
+ import com.grarak.kerneladiutor.fragments.statistics.OverallFragment;
+ import com.grarak.kerneladiutor.fragments.tools.BackupFragment;
+ import com.grarak.kerneladiutor.fragments.tools.BuildpropFragment;
+-import com.grarak.kerneladiutor.fragments.tools.DataSharingFragment;
+ import com.grarak.kerneladiutor.fragments.tools.InitdFragment;
+ import com.grarak.kerneladiutor.fragments.tools.OnBootFragment;
+ import com.grarak.kerneladiutor.fragments.tools.ProfileFragment;
+ import com.grarak.kerneladiutor.fragments.tools.RecoveryFragment;
+ import com.grarak.kerneladiutor.fragments.tools.customcontrols.CustomControlsFragment;
+ import com.grarak.kerneladiutor.fragments.tools.downloads.DownloadsFragment;
+-import com.grarak.kerneladiutor.services.monitor.Monitor;
+ import com.grarak.kerneladiutor.utils.Device;
+ import com.grarak.kerneladiutor.utils.Prefs;
+ import com.grarak.kerneladiutor.utils.Utils;
+@@ -216,7 +214,6 @@ public class NavigationActivity extends BaseActivity
+         }
+         sFragments.add(new NavigationActivity.NavigationFragment(R.string.misc, new MiscFragment(), R.drawable.ic_clear));
+         sFragments.add(new NavigationActivity.NavigationFragment(R.string.tools));
+-        sFragments.add(new NavigationActivity.NavigationFragment(R.string.data_sharing, new DataSharingFragment(), R.drawable.ic_database));
+         sFragments.add(new NavigationActivity.NavigationFragment(R.string.custom_controls, new CustomControlsFragment(), R.drawable.ic_console));
+ 
+         SupportedDownloads supportedDownloads = new SupportedDownloads(this);
+@@ -290,10 +287,6 @@ public class NavigationActivity extends BaseActivity
+             mSelection = firstTab();
+         }
+         onItemSelected(mSelection, false, false);
+-
+-        if (Prefs.getBoolean("data_sharing", true, this)) {
+-            startService(new Intent(this, Monitor.class));
+-        }
+     }
+ 
+     private int firstTab() {
+diff --git a/app/src/main/java/com/grarak/kerneladiutor/fragments/tools/DataSharingFragment.java b/app/src/main/java/com/grarak/kerneladiutor/fragments/tools/DataSharingFragment.java
+deleted file mode 100644
+index 4024e93d..00000000
+--- a/app/src/main/java/com/grarak/kerneladiutor/fragments/tools/DataSharingFragment.java
++++ /dev/null
+@@ -1,108 +0,0 @@
+-/*
+- * Copyright (C) 2015-2016 Willi Ye <williye97@gmail.com>
+- *
+- * This file is part of Kernel Adiutor.
+- *
+- * Kernel Adiutor is free software: you can redistribute it and/or modify
+- * it under the terms of the GNU General Public License as published by
+- * the Free Software Foundation, either version 3 of the License, or
+- * (at your option) any later version.
+- *
+- * Kernel Adiutor is distributed in the hope that it will be useful,
+- * but WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+- * GNU General Public License for more details.
+- *
+- * You should have received a copy of the GNU General Public License
+- * along with Kernel Adiutor.  If not, see <http://www.gnu.org/licenses/>.
+- *
+- */
+-package com.grarak.kerneladiutor.fragments.tools;
+-
+-import android.content.Intent;
+-import android.graphics.Color;
+-import android.graphics.drawable.Drawable;
+-import android.support.v4.content.ContextCompat;
+-import android.support.v4.graphics.drawable.DrawableCompat;
+-
+-import com.grarak.kerneladiutor.R;
+-import com.grarak.kerneladiutor.activities.DataSharingSearchActivity;
+-import com.grarak.kerneladiutor.fragments.DescriptionFragment;
+-import com.grarak.kerneladiutor.fragments.RecyclerViewFragment;
+-import com.grarak.kerneladiutor.services.monitor.Monitor;
+-import com.grarak.kerneladiutor.utils.Prefs;
+-import com.grarak.kerneladiutor.utils.Utils;
+-import com.grarak.kerneladiutor.utils.ViewUtils;
+-import com.grarak.kerneladiutor.views.recyclerview.DescriptionView;
+-import com.grarak.kerneladiutor.views.recyclerview.RecyclerViewItem;
+-import com.grarak.kerneladiutor.views.recyclerview.SwitchView;
+-
+-import java.util.List;
+-
+-/**
+- * Created by willi on 17.12.16.
+- */
+-
+-public class DataSharingFragment extends RecyclerViewFragment {
+-
+-    @Override
+-    protected boolean showBottomFab() {
+-        return true;
+-    }
+-
+-    @Override
+-    protected Drawable getBottomFabDrawable() {
+-        Drawable drawable = DrawableCompat.wrap(ContextCompat.getDrawable(
+-                getActivity(), R.drawable.ic_search));
+-        DrawableCompat.setTint(drawable, Color.WHITE);
+-        return drawable;
+-    }
+-
+-    @Override
+-    protected void onBottomFabClick() {
+-        super.onBottomFabClick();
+-        if (!Utils.DONATED) {
+-            ViewUtils.dialogDonate(getActivity());
+-            return;
+-        }
+-
+-        startActivity(new Intent(getActivity(), DataSharingSearchActivity.class));
+-    }
+-
+-    @Override
+-    protected void init() {
+-        super.init();
+-
+-        addViewPagerFragment(DescriptionFragment.newInstance(
+-                getString(R.string.welcome), getString(R.string.data_sharing_summary)));
+-        addViewPagerFragment(DescriptionFragment.newInstance(
+-                getString(R.string.welcome),
+-                Utils.htmlFrom(getString(R.string.data_sharing_summary_link))));
+-    }
+-
+-    @Override
+-    protected void addItems(List<RecyclerViewItem> items) {
+-        SwitchView datasharing = new SwitchView();
+-        datasharing.setSummary(getString(R.string.sharing_enable));
+-        datasharing.setChecked(Prefs.getBoolean("data_sharing", true, getActivity()));
+-        datasharing.addOnSwitchListener(new SwitchView.OnSwitchListener() {
+-            @Override
+-            public void onChanged(SwitchView switchView, boolean isChecked) {
+-                if (isChecked) {
+-                    getActivity().startService(new Intent(getActivity(), Monitor.class));
+-                } else {
+-                    getActivity().stopService(new Intent(getActivity(), Monitor.class));
+-                }
+-                Prefs.saveBoolean("data_sharing", isChecked, getActivity());
+-            }
+-        });
+-
+-        items.add(datasharing);
+-    }
+-
+-    @Override
+-    protected boolean showAd() {
+-        return true;
+-    }
+-
+-}
+diff --git a/app/src/main/java/com/grarak/kerneladiutor/services/boot/Receiver.java b/app/src/main/java/com/grarak/kerneladiutor/services/boot/Receiver.java
+index 726df1ce..2a05be85 100755
+--- a/app/src/main/java/com/grarak/kerneladiutor/services/boot/Receiver.java
++++ b/app/src/main/java/com/grarak/kerneladiutor/services/boot/Receiver.java
+@@ -23,7 +23,6 @@ import android.content.BroadcastReceiver;
+ import android.content.Context;
+ import android.content.Intent;
+ 
+-import com.grarak.kerneladiutor.services.monitor.Monitor;
+ import com.grarak.kerneladiutor.utils.Prefs;
+ 
+ /**
+@@ -35,9 +34,6 @@ public class Receiver extends BroadcastReceiver {
+     public void onReceive(Context context, Intent intent) {
+         if (Intent.ACTION_BOOT_COMPLETED.equals(intent.getAction())) {
+             context.startService(new Intent(context, Service.class));
+-            if (Prefs.getBoolean("data_sharing", true, context)) {
+-                context.startService(new Intent(context, Monitor.class));
+-            }
+         }
+     }
+ 
+diff --git a/app/src/main/java/com/grarak/kerneladiutor/services/monitor/Monitor.java b/app/src/main/java/com/grarak/kerneladiutor/services/monitor/Monitor.java
+deleted file mode 100644
+index 8d206df3..00000000
+--- a/app/src/main/java/com/grarak/kerneladiutor/services/monitor/Monitor.java
++++ /dev/null
+@@ -1,199 +0,0 @@
+-/*
+- * Copyright (C) 2017 Willi Ye <williye97@gmail.com>
+- *
+- * This file is part of Kernel Adiutor.
+- *
+- * Kernel Adiutor is free software: you can redistribute it and/or modify
+- * it under the terms of the GNU General Public License as published by
+- * the Free Software Foundation, either version 3 of the License, or
+- * (at your option) any later version.
+- *
+- * Kernel Adiutor is distributed in the hope that it will be useful,
+- * but WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+- * GNU General Public License for more details.
+- *
+- * You should have received a copy of the GNU General Public License
+- * along with Kernel Adiutor.  If not, see <http://www.gnu.org/licenses/>.
+- *
+- */
+-package com.grarak.kerneladiutor.services.monitor;
+-
+-import android.app.Service;
+-import android.content.BroadcastReceiver;
+-import android.content.Context;
+-import android.content.Intent;
+-import android.content.IntentFilter;
+-import android.os.BatteryManager;
+-import android.os.IBinder;
+-import android.os.RemoteException;
+-import android.support.annotation.Nullable;
+-
+-import com.grarak.kerneladiutor.BuildConfig;
+-import com.grarak.kerneladiutor.database.Settings;
+-import com.grarak.kerneladiutor.utils.Device;
+-import com.grarak.kerneladiutor.utils.Prefs;
+-import com.grarak.kerneladiutor.utils.Utils;
+-import com.grarak.kerneladiutor.utils.server.ServerCreateDevice;
+-
+-import org.json.JSONArray;
+-import org.json.JSONException;
+-import org.json.JSONObject;
+-
+-import java.util.ArrayList;
+-import java.util.List;
+-import java.util.concurrent.TimeUnit;
+-
+-/**
+- * Created by willi on 01.12.16.
+- */
+-
+-public class Monitor extends Service {
+-
+-    private int mLevel;
+-    private long mTime;
+-    private List<Long> mTimes = new ArrayList<>();
+-    private ServerCreateDevice mServerCreateDevice = new ServerCreateDevice("https://www.grarak.com");
+-    private boolean mScreenOn;
+-    private boolean mCalculating;
+-
+-    private BroadcastReceiver mBatteryReceiver = new BroadcastReceiver() {
+-        @Override
+-        public void onReceive(Context context, Intent intent) {
+-            int status = intent.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
+-            boolean charging = status == BatteryManager.BATTERY_STATUS_CHARGING;
+-
+-            if (charging || !mScreenOn) {
+-                mLevel = 0;
+-                mTime = 0;
+-            } else {
+-                mCalculating = true;
+-
+-                long time = System.nanoTime();
+-                int level = intent.getIntExtra(BatteryManager.EXTRA_LEVEL, 0);
+-
+-                if (mLevel != 0 && mLevel > level && mTime != 0 && mTime < time && mLevel - level > 0) {
+-                    long seconds = TimeUnit.SECONDS.convert((time - mTime) / (mLevel - level),
+-                            TimeUnit.NANOSECONDS);
+-                    if (seconds >= 100) {
+-                        mTimes.add(seconds);
+-
+-                        if (mTimes.size() % 15 == 0) {
+-                            postCreate(mTimes.toArray(new Long[mTimes.size()]));
+-                            if (mTimes.size() >= 100) {
+-                                mTimes.clear();
+-                            }
+-                        }
+-                    }
+-                }
+-                mLevel = level;
+-                mTime = time;
+-            }
+-
+-            mCalculating = false;
+-        }
+-    };
+-
+-    private BroadcastReceiver mScreenReceiver = new BroadcastReceiver() {
+-        @Override
+-        public void onReceive(Context context, Intent intent) {
+-            mScreenOn = intent.getAction().equals(Intent.ACTION_SCREEN_ON);
+-            if (!mScreenOn && !mCalculating) {
+-                mLevel = 0;
+-                mTime = 0;
+-            }
+-        }
+-    };
+-
+-    private void postCreate(final Long[] times) {
+-        if (mLevel < 15 || !Prefs.getBoolean("data_sharing", true, this)) return;
+-
+-        new Thread(new Runnable() {
+-            @Override
+-            public void run() {
+-                try {
+-                    JSONObject data = new JSONObject();
+-                    data.put("android_id", Utils.getAndroidId(Monitor.this));
+-                    data.put("android_version", Device.getVersion());
+-                    data.put("kernel_version", Device.getKernelVersion(true, false));
+-                    data.put("app_version", BuildConfig.VERSION_NAME);
+-                    data.put("board", Device.getBoard(false));
+-                    data.put("model", Device.getModel());
+-                    data.put("vendor", Device.getVendor());
+-                    data.put("cpuinfo", Utils.encodeString(Device.CPUInfo.getCpuInfo(false)));
+-                    data.put("fingerprint", Device.getFingerprint());
+-
+-                    JSONArray commands = new JSONArray();
+-                    Settings settings = new Settings(Monitor.this);
+-                    for (Settings.SettingsItem item : settings.getAllSettings()) {
+-                        commands.put(item.getSetting());
+-                    }
+-                    data.put("commands", commands);
+-
+-                    JSONArray batteryTimes = new JSONArray();
+-                    for (long time : times) {
+-                        batteryTimes.put(time);
+-                    }
+-                    data.put("times", batteryTimes);
+-
+-                    try {
+-                        long time = 0;
+-                        for (int i = 0; i < 100000; i++) {
+-                            time += Utils.computeSHAHash(Utils.getRandomString(16));
+-                        }
+-                        data.put("cpu", time);
+-                    } catch (Exception ignored) {
+-                    }
+-
+-                    mServerCreateDevice.postDeviceCreate(data);
+-                } catch (JSONException e) {
+-                    e.printStackTrace();
+-                }
+-            }
+-        }).start();
+-    }
+-
+-    private IMonitor.Stub mBinder = new IMonitor.Stub() {
+-        @Override
+-        public void onSettingsChange() throws RemoteException {
+-            if (mTimes != null) {
+-                mTimes.clear();
+-                mLevel = 0;
+-                mTime = 0;
+-            }
+-        }
+-    };
+-
+-    @Nullable
+-    @Override
+-    public IBinder onBind(Intent intent) {
+-        return mBinder;
+-    }
+-
+-    @Override
+-    public void onCreate() {
+-        super.onCreate();
+-
+-        registerReceiver(mBatteryReceiver, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
+-
+-        IntentFilter screenFilter = new IntentFilter();
+-        screenFilter.addAction(Intent.ACTION_SCREEN_OFF);
+-        screenFilter.addAction(Intent.ACTION_SCREEN_ON);
+-        registerReceiver(mScreenReceiver, screenFilter);
+-
+-        mScreenOn = Utils.isScreenOn(this);
+-    }
+-
+-    @Override
+-    public int onStartCommand(Intent intent, int flags, int startId) {
+-        return START_STICKY;
+-    }
+-
+-    @Override
+-    public void onDestroy() {
+-        super.onDestroy();
+-        unregisterReceiver(mBatteryReceiver);
+-        unregisterReceiver(mScreenReceiver);
+-    }
+-
+-}
+diff --git a/app/src/main/java/com/grarak/kerneladiutor/utils/root/Control.java b/app/src/main/java/com/grarak/kerneladiutor/utils/root/Control.java
+index 0b36e25b..f4de5d00 100755
+--- a/app/src/main/java/com/grarak/kerneladiutor/utils/root/Control.java
++++ b/app/src/main/java/com/grarak/kerneladiutor/utils/root/Control.java
+@@ -28,8 +28,6 @@ import android.os.RemoteException;
+ import android.util.Log;
+ 
+ import com.grarak.kerneladiutor.database.Settings;
+-import com.grarak.kerneladiutor.services.monitor.IMonitor;
+-import com.grarak.kerneladiutor.services.monitor.Monitor;
+ 
+ import java.util.ArrayList;
+ import java.util.LinkedHashMap;
+@@ -95,25 +93,6 @@ public class Control {
+         if (command.startsWith("#")) return;
+         RootUtils.runCommand(command);
+         Log.i(TAG, command);
+-        if (context != null) {
+-            context.bindService(new Intent(context, Monitor.class), new ServiceConnection() {
+-                        @Override
+-                        public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
+-                            try {
+-                                IMonitor monitor = IMonitor.Stub.asInterface(iBinder);
+-                                monitor.onSettingsChange();
+-                                context.unbindService(this);
+-                            } catch (RemoteException e) {
+-                                e.printStackTrace();
+-                            }
+-                        }
+-
+-                        @Override
+-                        public void onServiceDisconnected(ComponentName componentName) {
+-                        }
+-                    },
+-                    Context.BIND_AUTO_CREATE);
+-        }
+     }
+ 
+     private void run(final String command, final String category, final String id,
+diff --git a/app/src/main/java/com/grarak/kerneladiutor/views/recyclerview/datasharing/DataSharingDeviceView.java b/app/src/main/java/com/grarak/kerneladiutor/views/recyclerview/datasharing/DataSharingDeviceView.java
+deleted file mode 100644
+index de1f69e0..00000000
+--- a/app/src/main/java/com/grarak/kerneladiutor/views/recyclerview/datasharing/DataSharingDeviceView.java
++++ /dev/null
+@@ -1,123 +0,0 @@
+-/*
+- * Copyright (C) 2017 Willi Ye <williye97@gmail.com>
+- *
+- * This file is part of Kernel Adiutor.
+- *
+- * Kernel Adiutor is free software: you can redistribute it and/or modify
+- * it under the terms of the GNU General Public License as published by
+- * the Free Software Foundation, either version 3 of the License, or
+- * (at your option) any later version.
+- *
+- * Kernel Adiutor is distributed in the hope that it will be useful,
+- * but WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+- * GNU General Public License for more details.
+- *
+- * You should have received a copy of the GNU General Public License
+- * along with Kernel Adiutor.  If not, see <http://www.gnu.org/licenses/>.
+- *
+- */
+-package com.grarak.kerneladiutor.views.recyclerview.datasharing;
+-
+-import android.view.LayoutInflater;
+-import android.view.View;
+-import android.view.ViewGroup;
+-import android.widget.TextView;
+-
+-import com.grarak.kerneladiutor.R;
+-import com.grarak.kerneladiutor.utils.server.DeviceInfo;
+-import com.grarak.kerneladiutor.views.dialog.Dialog;
+-import com.grarak.kerneladiutor.views.recyclerview.RecyclerViewItem;
+-
+-/**
+- * Created by willi on 20.09.17.
+- */
+-
+-public class DataSharingDeviceView extends RecyclerViewItem {
+-
+-    private DeviceInfo mDeviceInfo;
+-    private int mRank;
+-
+-    private View mDialogView;
+-
+-    public DataSharingDeviceView(DeviceInfo deviceInfo, int rank) {
+-        mDeviceInfo = deviceInfo;
+-        mRank = rank;
+-    }
+-
+-    @Override
+-    public int getLayoutRes() {
+-        return R.layout.rv_datasharing_device;
+-    }
+-
+-    @Override
+-    public void onCreateView(View view) {
+-        TextView rank = view.findViewById(R.id.rank);
+-        TextView name = view.findViewById(R.id.name);
+-        TextView board = view.findViewById(R.id.board);
+-        TextView fingerprint = view.findViewById(R.id.fingerprint);
+-
+-        rank.setText(String.valueOf(mRank / 10 == 0 ? "0" + mRank : mRank));
+-
+-        String vendor = mDeviceInfo.getVendor();
+-        vendor = vendor.substring(0, 1).toUpperCase() + vendor.substring(1);
+-        name.setText(vendor + " " + mDeviceInfo.getModel());
+-
+-        board.setText(mDeviceInfo.getBoard());
+-        fingerprint.setText(mDeviceInfo.getFingerprint());
+-
+-        view.setOnClickListener(new View.OnClickListener() {
+-            @Override
+-            public void onClick(View view) {
+-                ViewGroup parent = (ViewGroup) mDialogView.getParent();
+-                if (parent != null) parent.removeView(mDialogView);
+-                new Dialog(view.getContext())
+-                        .setView(mDialogView).show();
+-            }
+-        });
+-
+-        super.onCreateView(view);
+-
+-        if (mDialogView != null) return;
+-        mDialogView = LayoutInflater.from(view.getContext()).inflate(
+-                R.layout.dialog_datasharing_device, null, false);
+-
+-        TextView title = mDialogView.findViewById(R.id.title);
+-        TextView androidVersion = mDialogView.findViewById(R.id.android_version);
+-        TextView kernelVersion = mDialogView.findViewById(R.id.kernel_version);
+-        board = mDialogView.findViewById(R.id.board);
+-        fingerprint = mDialogView.findViewById(R.id.fingerprint);
+-        TextView sot = mDialogView.findViewById(R.id.sot);
+-        TextView cpuScore = mDialogView.findViewById(R.id.cpu_score);
+-        TextView cpuInfo = mDialogView.findViewById(R.id.cpu_information);
+-        TextView settings = mDialogView.findViewById(R.id.settings);
+-
+-        title.setText(vendor + " " + mDeviceInfo.getModel());
+-        androidVersion.setText(mDeviceInfo.getAndroidVersion());
+-        kernelVersion.setText(mDeviceInfo.getKernelVersion());
+-        board.setText(mDeviceInfo.getBoard());
+-        fingerprint.setText(mDeviceInfo.getFingerprint());
+-
+-        long seconds = mDeviceInfo.getAverageSOT();
+-        int h = (int) seconds / 60 / 60;
+-        int m = (int) seconds / 60 % 60;
+-        int s = (int) seconds % 60;
+-
+-        sot.setText(h + ":" + m + ":" + s + " (" + view.getContext().getString(
+-                R.string.screen_always_on) + ")");
+-        cpuScore.setText(mDeviceInfo.getCpu() + " (" + view.getContext().getString(
+-                R.string.lower_better) + ")");
+-        cpuInfo.setText(mDeviceInfo.getCpuInfo());
+-        if (mDeviceInfo.getCommands().size() == 0) {
+-            settings.setText(view.getContext().getString(R.string.default_settings));
+-        } else {
+-            StringBuilder commands = new StringBuilder();
+-            for (String command : mDeviceInfo.getCommands()) {
+-                commands.append(command).append("\n");
+-            }
+-            commands.setLength(commands.length() - 1);
+-            settings.setText(commands.toString());
+-        }
+-    }
+-
+-}
+diff --git a/app/src/main/java/com/grarak/kerneladiutor/views/recyclerview/datasharing/DataSharingPageView.java b/app/src/main/java/com/grarak/kerneladiutor/views/recyclerview/datasharing/DataSharingPageView.java
+deleted file mode 100644
+index a3f27f2d..00000000
+--- a/app/src/main/java/com/grarak/kerneladiutor/views/recyclerview/datasharing/DataSharingPageView.java
++++ /dev/null
+@@ -1,112 +0,0 @@
+-/*
+- * Copyright (C) 2017 Willi Ye <williye97@gmail.com>
+- *
+- * This file is part of Kernel Adiutor.
+- *
+- * Kernel Adiutor is free software: you can redistribute it and/or modify
+- * it under the terms of the GNU General Public License as published by
+- * the Free Software Foundation, either version 3 of the License, or
+- * (at your option) any later version.
+- *
+- * Kernel Adiutor is distributed in the hope that it will be useful,
+- * but WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+- * GNU General Public License for more details.
+- *
+- * You should have received a copy of the GNU General Public License
+- * along with Kernel Adiutor.  If not, see <http://www.gnu.org/licenses/>.
+- *
+- */
+-package com.grarak.kerneladiutor.views.recyclerview.datasharing;
+-
+-import android.view.View;
+-import android.widget.TextView;
+-
+-import com.grarak.kerneladiutor.R;
+-import com.grarak.kerneladiutor.views.recyclerview.RecyclerViewItem;
+-
+-/**
+- * Created by willi on 22.09.17.
+- */
+-
+-public class DataSharingPageView extends RecyclerViewItem {
+-
+-    public interface DataSharingPageListener {
+-        void onPrevious();
+-
+-        void onNext();
+-    }
+-
+-    private View mPrevious;
+-    private View mNext;
+-    private TextView mPageText;
+-
+-    private boolean mShowPrevious;
+-    private boolean mShowNext;
+-    private int mPage;
+-
+-    private DataSharingPageListener mDataSharingPageListener;
+-
+-    @Override
+-    public int getLayoutRes() {
+-        return R.layout.rv_datasharing_page;
+-    }
+-
+-    @Override
+-    public void onCreateView(View view) {
+-        mPrevious = view.findViewById(R.id.previous_btn);
+-        mNext = view.findViewById(R.id.next_btn);
+-        mPageText = view.findViewById(R.id.page);
+-
+-        mPrevious.setOnClickListener(new View.OnClickListener() {
+-            @Override
+-            public void onClick(View view) {
+-                mDataSharingPageListener.onPrevious();
+-            }
+-        });
+-
+-        mNext.setOnClickListener(new View.OnClickListener() {
+-            @Override
+-            public void onClick(View view) {
+-                mDataSharingPageListener.onNext();
+-            }
+-        });
+-
+-        setFullSpan(true);
+-        super.onCreateView(view);
+-
+-        setup();
+-    }
+-
+-    private void setup() {
+-        if (mPrevious != null) {
+-            mPrevious.setVisibility(mShowPrevious ? View.VISIBLE : View.INVISIBLE);
+-        }
+-        if (mNext != null) {
+-            mNext.setVisibility(mShowNext ? View.VISIBLE : View.INVISIBLE);
+-        }
+-        if (mPageText != null) {
+-            mPageText.setText(mPageText.getContext().getString(R.string.page) + " " + mPage);
+-        }
+-    }
+-
+-    public void setDataSharingPageListener(DataSharingPageListener dataSharingListener) {
+-        mDataSharingPageListener = dataSharingListener;
+-    }
+-
+-    public void showPrevious(boolean show) {
+-        mShowPrevious = show;
+-        setup();
+-    }
+-
+-    public void showNext(boolean show) {
+-        mShowNext = show;
+-        setup();
+-    }
+-
+-    public void setPage(int page) {
+-        mPage = page;
+-        setup();
+-    }
+-
+-}
+-- 
+2.11.0
+
