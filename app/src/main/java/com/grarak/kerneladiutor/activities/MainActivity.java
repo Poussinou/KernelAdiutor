@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015-2016 Willi Ye <williye97@gmail.com>
+ * Copyright (C) 2015-2017 Willi Ye <williye97@gmail.com>
  *
  * This file is part of Kernel Adiutor.
  *
@@ -136,9 +136,9 @@ public class MainActivity extends BaseActivity {
     private void launch(int code) {
         Intent intent = new Intent(this, NavigationActivity.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
-        Bundle bundle = getIntent().getExtras();
-        if (bundle != null) {
-            intent.putExtras(bundle);
+        intent.putExtra("result", code);
+        if (getIntent().getExtras() != null) {
+            intent.putExtras(getIntent().getExtras());
         }
         startActivity(intent);
         finish();
