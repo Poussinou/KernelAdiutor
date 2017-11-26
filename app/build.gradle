@@ -7,8 +7,8 @@ android {
         applicationId "com.nhellfire.kerneladiutor"
         minSdkVersion 15
         targetSdkVersion 27
-        versionCode 247
-        versionName "0.9.73.2-fdroid0"
+        versionCode 248
+        versionName "0.9.73.3-fdroid0"
         vectorDrawables.useSupportLibrary = true
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
